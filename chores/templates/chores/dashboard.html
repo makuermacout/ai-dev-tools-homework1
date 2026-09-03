@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chore Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        .card { border: 1px solid #ccc; padding: 1rem; margin-bottom: 1rem; border-radius: 6px; }
+        .btn-green { background-color: #28a745; color: white; border: none; padding: 0.5rem 1rem; cursor: pointer; }
+        .btn-red { background-color: #dc3545; color: white; border: none; padding: 0.5rem 1rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}</h1>
+
+    <h2>Your Tasks to Complete</h2>
+    {% for task in assigned_tasks %}
+        <div class="card">
+            <h3>{{ task.chore_definition.title }}</h3>
+            <p><strong>Due:</strong> {{ task.due_date }} | <strong>Status:</strong> {{ task.get_status_display }}</p>
+            {% if task.rejection_notes %}
+                <p style="color: red;"><strong>Feedback:</strong> {{ task.rejection_notes }}</p>
+            {% endif %}
+            <form method="POST" action="{% url 'mark_chore_complete' task.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-green">Mark Complete</button>
+            </form>
+        </div>
+    {% empty %}
+        <p>No chores currently assigned to you!</p>
+    {% endfor %}
+
+    <h2>Tasks Awaiting Your Inspection</h2>
+    {% for inspection in inspections_pending %}
+        <div class="card">
+            <h3>{{ inspection.chore_definition.title }}</h3>
+            <p><strong>Completed By:</strong> {{ inspection.doer.username }}</p>
+            <form method="POST" action="{% url 'review_chore' inspection.pk %}">
+                {% csrf_token %}
+                <input type="text" name="rejection_notes" placeholder="Rejection reason (if applicable)">
+                <br><br>
+                <button type="submit" name="action" value="approve" class="btn-green">Approve</button>
+                <button type="submit" name="action" value="reject" class="btn-red">Reject</button>
+            </form>
+        </div>
+    {% empty %}
+        <p>No pending inspections for you to review.</p>
+    {% endfor %}
+</body>
+</html>
